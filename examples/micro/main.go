@@ -99,6 +99,25 @@ func runGate(c *cli.Context) error {
 				}
 			}
 			return fmt.Errorf("unauthorized handshake")
+
+			// 同步调用第三方认证（示例用 HTTP）
+			// ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			// defer cancel()
+			// req, _ := http.NewRequestWithContext(ctx, "GET", "https://auth.example/verify?token="+url.QueryEscape(tok), nil)
+			// resp, err := http.DefaultClient.Do(req)
+			// if err != nil {
+			// 	return fmt.Errorf("auth service error: %w", err)
+			// }
+			// defer resp.Body.Close()
+			// if resp.StatusCode != http.StatusOK {
+			// 	return fmt.Errorf("unauthorized")
+			// }
+
+			// 可选：解析返回并绑定 UID
+			// s.Bind(uid)
+
+			// return nil
+
 		}),
 		nano.WithDebugMode(),
 	)
