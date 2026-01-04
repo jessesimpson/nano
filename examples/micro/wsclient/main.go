@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/lonng/nano/examples/micro/game"
 )
 
 // This is a very small client that uses the same simple framing as the example
@@ -48,10 +49,10 @@ func main() {
 		log.Fatal("write handshake ack:", err)
 	}
 
-	// send a request to GateService.Hello with JSON body
-	// build nano Message binary: Request with id=1, route="GateService.Hello", body={"name":"cli"}
-	body := map[string]string{"name": "cli"}
-	bb, _ := json.Marshal(body)
+	// send a request to GameService.Hello with JSON body using the server's HelloRequest
+	// build nano Message binary: Request with id=1, route="GameService.Hello", body using game.HelloRequest
+	req := game.HelloRequest{Name: "cli"}
+	bb, _ := json.Marshal(req)
 	// message type: Request (0)
 	// Send route directly to `GameService.Hello` so gate will forward the Request to game nodes
 	mbytes := encodeMessage(1, 0x00, "GameService.Hello", bb)
