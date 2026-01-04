@@ -94,7 +94,20 @@ func runGate(c *cli.Context) error {
 				return fmt.Errorf("handshake parse error: %v", err)
 			}
 			if auth, ok := m["auth"].(map[string]interface{}); ok {
-				if t, ok2 := auth["token"].(string); ok2 && t == "valid-token" {
+				if t, ok2 := auth["token"].(string); ok2 {
+					// 简单校验示例：只接受 token == "valid-token"
+					if t != "valid-token" {
+						return fmt.Errorf("unauthorized handshake")
+					}
+
+					// 可选：将 token 映射为 uid 并绑定到 session（示例逻辑）
+					// 在生产中请用真实的认证服务并根据返回的用户信息绑定真实 UID
+					// 这里演示将固定的测试 token 映射为 uid=1
+					var uid int64 = 1
+					if err := s.Bind(uid); err != nil {
+						return fmt.Errorf("bind uid error: %w", err)
+					}
+
 					return nil
 				}
 			}
