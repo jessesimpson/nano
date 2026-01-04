@@ -28,7 +28,11 @@ func main() {
 
 	// perform a minimal handshake using the pomelo package format used by the
 	// examples. We'll send a handshake package (type 1) with a small JSON body.
-	hb := map[string]interface{}{"sys": map[string]interface{}{"heartbeat": 30}}
+	hb := map[string]interface{}{
+		"sys": map[string]interface{}{"heartbeat": 30},
+		// include auth token expected by Gate handshake validator
+		"auth": map[string]interface{}{"token": "valid-token"},
+	}
 	b, _ := json.Marshal(hb)
 	pkg := encodePackage(1, b)
 	if err := c.WriteMessage(websocket.BinaryMessage, pkg); err != nil {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,7 +12,7 @@ import (
 	"github.com/lonng/nano"
 	"github.com/lonng/nano/examples/micro/game"
 	"github.com/lonng/nano/examples/micro/gate"
-	"github.com/lonng/nano/serialize/json"
+	sjson "github.com/lonng/nano/serialize/json"
 	"github.com/lonng/nano/session"
 	"github.com/urfave/cli"
 )
@@ -68,7 +70,7 @@ func runMaster(c *cli.Context) error {
 
 	nano.Listen("127.0.0.1:34567",
 		nano.WithMaster(),
-		nano.WithSerializer(json.NewSerializer()),
+		nano.WithSerializer(sjson.NewSerializer()),
 		nano.WithDebugMode(),
 	)
 	return nil
@@ -82,9 +84,22 @@ func runGate(c *cli.Context) error {
 		nano.WithAdvertiseAddr(master),
 		nano.WithClientAddr(gateAddr),
 		nano.WithComponents(gate.Services),
-		nano.WithSerializer(json.NewSerializer()),
+		nano.WithSerializer(sjson.NewSerializer()),
 		nano.WithIsWebsocket(true),
 		nano.WithWSPath("/nano"),
+		// Handshake validator: expect JSON body with {"auth": {"token": "valid-token"}}
+		nano.WithHandshakeValidator(func(s *session.Session, data []byte) error {
+			var m map[string]interface{}
+			if err := json.Unmarshal(data, &m); err != nil {
+				return fmt.Errorf("handshake parse error: %v", err)
+			}
+			if auth, ok := m["auth"].(map[string]interface{}); ok {
+				if t, ok2 := auth["token"].(string); ok2 && t == "valid-token" {
+					return nil
+				}
+			}
+			return fmt.Errorf("unauthorized handshake")
+		}),
 		nano.WithDebugMode(),
 	)
 	return nil
@@ -96,7 +111,7 @@ func runGame(c *cli.Context) error {
 	nano.Listen(listen,
 		nano.WithAdvertiseAddr(master),
 		nano.WithComponents(game.Services),
-		nano.WithSerializer(json.NewSerializer()),
+		nano.WithSerializer(sjson.NewSerializer()),
 		nano.WithDebugMode(),
 	)
 	return nil
